@@ -91,6 +91,14 @@ class _HomePageState extends State<HomePage> {
                             );
                           },
                         ),
+                        trailing: IconButton(
+                          onPressed: () {
+                            context.read<TaskCubit>().removeTask(
+                              state.tasksList[index].id,
+                            );
+                          },
+                          icon: const Icon(Icons.delete),
+                        ),
                       );
                     },
                   ),
