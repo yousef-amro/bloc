@@ -1,9 +1,13 @@
-import 'package:blocuhiuhuih/controller/cubit/counter_cubit.dart';
+import 'package:blocuhiuhuih/models/task_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:blocuhiuhuih/controller/cubit/task_cubit.dart';
+import 'package:uuid/uuid.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    BlocProvider(create: (_) => TaskCubit(), child: const MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -18,69 +22,84 @@ class MyApp extends StatelessWidget {
           seedColor: Colors.deepPurple,
         ),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const HomePage(),
     );
   }
 }
 
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({super.key, required this.title});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
-  final String title;
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final TextEditingController controller = TextEditingController();
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    print("dd");
-    return BlocProvider(
-      create: (_) => CounterCubit(),
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(
-            context,
-          ).colorScheme.inversePrimary,
-          title: Text(title),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'You have pushed the button this many times:',
-              ),
-              BlocBuilder<CounterCubit, CounterState>(
-                builder: (BuildContext context, state) {
-                  print("d11d");
-                  return Text(
-                    state.count.toString(),
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  );
-                },
-              ),
-              BlocBuilder<CounterCubit, CounterState>(
-                builder: (BuildContext context, state) {
-                  return FloatingActionButton(
-                    onPressed: () {
-                      context.read<CounterCubit>().increase();
-                    },
-                    child: const Icon(Icons.add),
-                  );
-                },
-              ),
-              const SizedBox(height: 30),
-              BlocBuilder<CounterCubit, CounterState>(
-                builder: (BuildContext context, state) {
-                  return FloatingActionButton(
-                    onPressed: () {
-                      context.read<CounterCubit>().decrease();
-                    },
-                    child: const Icon(Icons.emoji_flags_outlined),
-                  );
-                },
-              ),
-            ],
+    return BlocBuilder<TaskCubit, TaskState>(
+      builder: (BuildContext context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.inversePrimary,
+            title: const Text('Flutter Demo Home Page'),
           ),
-        ),
-      ),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                TextField(
+                  controller: controller,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Enter Task',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    if (controller.text.isNotEmpty) {
+                      context.read<TaskCubit>().addTask(
+                        controller.text,
+                      );
+                      controller.clear();
+                    }
+                  },
+                  child: const Text('Add Task'),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: state.tasksList.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return ListTile(
+                        title: Text(state.tasksList[index].title),
+                        leading: Checkbox(
+                          value: state.tasksList[index].isCompleted,
+                          onChanged: (value) {
+                            context.read<TaskCubit>().toggleTask(
+                              state.tasksList[index].id,
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
